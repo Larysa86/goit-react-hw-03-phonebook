@@ -14,63 +14,77 @@ export class App extends Component {
     filter: '',
   };
 
-
-    addContact = ({ name, number }) => {
-      const newContact = {
-        id: nanoid(),
-        name,
-        number,
-      };
-      const currentName = name;
-      const matchName = this.state.contacts.some(
-        ({ name }) => name === currentName
-      );
-
-      matchName
-        ? alert(`${name} is already in contacts!`)
-        : this.setState(({ contacts }) => ({
-            contacts: [newContact, ...contacts],
-          }));
-    };
-
-    changeFilter = event => {
-      this.setState({ filter: event.currentTarget.value });
-    };
-
-    getVisibleContacts = () => {
-      const { contacts, filter } = this.state;
-      const normalizedFilter = filter.toLowerCase().trim();
-
-      return contacts.filter(({ name }) =>
-        name.toLowerCase().includes(normalizedFilter)
-      );
-    };
-
-    deleteContact = contactId => {
-      this.setState(({ contacts }) => ({
-        contacts: contacts.filter(({ id }) => id !== contactId),
-      }));
-    };
-
-    render() {
-      const { contacts, filter } = this.state;
-      const { addContact, changeFilter, deleteContact, getVisibleContacts } =
-        this;
-      const visibleContacts = getVisibleContacts();
-      const totalContacts = contacts.length;
-
-      return (
-        <div className={css.wrapper}>
-          <h1 className={css.title}>Phonebook</h1>
-          <ContactForm onSubmit={addContact} />
-          <h2 className={css.titleContacts}>Contacts</h2>
-          <Filter value={filter} onChange={changeFilter} />
-          <ContactList
-            deleteContact={deleteContact}
-            contacts={visibleContacts}
-            totalContacts={totalContacts}
-          />
-        </div>
-      );
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.contacts !== prevState.contacts) {
+      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
     }
+  }
+
+  componentDidMount() {
+    const contacts = localStorage.getItem('contacts');
+    const parseContacts = JSON.parse(contacts);
+
+    if (parseContacts) {
+      this.setState({ contacts: parseContacts });
+    }
+  }
+
+  addContact = ({ name, number }) => {
+    const newContact = {
+      id: nanoid(),
+      name,
+      number,
+    };
+    const currentName = name;
+    const matchName = this.state.contacts.some(
+      ({ name }) => name === currentName
+    );
+
+    matchName
+      ? alert(`${name} is already in contacts!`)
+      : this.setState(({ contacts }) => ({
+          contacts: [newContact, ...contacts],
+        }));
+  };
+
+  changeFilter = event => {
+    this.setState({ filter: event.currentTarget.value });
+  };
+
+  getVisibleContacts = () => {
+    const { contacts, filter } = this.state;
+    const normalizedFilter = filter.toLowerCase().trim();
+
+    return contacts.filter(({ name }) =>
+      name.toLowerCase().includes(normalizedFilter)
+    );
+  };
+
+  deleteContact = contactId => {
+    this.setState(({ contacts }) => ({
+      contacts: contacts.filter(({ id }) => id !== contactId),
+    }));
+  };
+
+  render() {
+    const { contacts, filter } = this.state;
+    const { addContact, changeFilter, deleteContact, getVisibleContacts } =
+      this;
+    const visibleContacts = getVisibleContacts();
+    const totalContacts = contacts.length;
+
+    return (
+      <div className={css.wrapper}>
+        <h1 className={css.title}>Phonebook</h1>
+        <ContactForm onSubmit={addContact} />
+        <h2 className={css.titleContacts}>Contacts</h2>
+        <Filter value={filter} onChange={changeFilter} />
+        <ContactList
+          onDeleteContact={deleteContact}
+          contacts={visibleContacts}
+          totalContacts={totalContacts}
+        />
+      </div>
+    );
+  }
 }
